@@ -1,0 +1,2 @@
+The procedure will crash when given a segment with no pixels, since the dominator will be zero, because when summing all
+histograms we will have literally nothing to sum.

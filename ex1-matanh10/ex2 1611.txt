@@ -1,0 +1,82 @@
+import numpy as np
+import scipy
+import imageio
+from scipy.io import wavfile
+from scipy import signal
+from scipy import interpolate
+def create_dft_matrix(n):
+    w = np.exp(2j * np.pi / n)
+    return np.matrix([[w**(a*b) for a in range(n)] for b in range(n)])
+    # i, j = np.meshgrid(np.arange(N), np.arange(N))
+    # omega = np.exp(- 2 * pi * 1J / N)
+    # W = np.power(omega, i * j) / sqrt(N)
+    # return W
+
+
+def DFT(signal):
+    mat = create_dft_matrix(len(signal))
+    return np.dot(mat,signal)
+
+def IDFT(fourier_signal):
+    mat = create_dft_matrix(len(fourier_signal))/len(fourier_signal)
+    return np.dot(mat,fourier_signal)
+
+def DFT2(image):
+    for i in range(len(image)):
+        image[i] = DFT(image[i])
+    new_image=image.T
+
+
+
+
+def change_rate(filename,ratio):
+    cur_rate, cur_audio = wavfile.read(filename)
+    num_samples = cur_audio.shape[0]
+    audio_time = num_samples/cur_rate
+    old_samples = np.linspace(0,audio_time,num_samples)
+    new_samples = np.linspace(0,audio_time,num_samples*ratio/cur_rate)
+    ##TO CHECK
+    interpolator = interpolate.interp1d(old_samples, cur_audio.T)
+    new_audio = interpolator(new_samples).T
+    wavfile.write('change_rate.wav',cur_rate*ratio, np.round(new_audio).astype(cur_audio.dtype))
+
+def change_samples(filename,ratio):
+    cur_rate, cur_audio = wavfile.read(filename)
+    dft_data = DFT(cur_audio)
+    centered = np.fft.fftshift(dft_data)
+    resized = resize(centered, ratio)
+    cur_audio = IDFT(resized)
+    return np.fft.ifftshift(cur_audio)
+
+
+def resize(data,ratio):
+    new_size = len(data) / ratio
+    if new_size>len(data):
+        resized = expand(data,new_size)
+    else:
+        resized = shrink(data,new_size)
+    return resized
+
+def expand(data,new_size):
+    to_add = new_size - len(data)
+    to_add_side = to_add/2
+    for i in range(to_add_side):
+        data.insert(0,0)
+        data.insert(len(data)-1,0)
+    if to_add%2 != 0:
+        data.insert(0,0)
+    return data
+
+
+def shrink(data,new_size):
+    to_remove = len(data) - new_size
+    for i in range(to_remove/2):
+        data.pop(i)
+    for i in range(len(data)-to_remove/2,len(data)):
+        data.pop(i)
+    return data
+
+def resize_spectrogram(data, ratio):
+    pass
+
+print(np.fft.fft([0,3,5,6,4,3])==DFT([0,3,5,6,4,3]))
