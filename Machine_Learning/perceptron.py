@@ -127,10 +127,6 @@ class Perceptron(BaseEstimator):
         responses : ndarray of shape (n_samples, )
             Predicted responses of given samples
         """
-        # if self.include_intercept_ == True:
-        #     one = np.ones((X.shape[0], 1))
-        #     np.append(X, one, axis=1)
-        # return np.sign(np.matmul(X, self.coefs_))
         if self.include_intercept_:
             X = np.c_[np.ones(X.shape[0]), X]
         return np.sign(np.dot(X, self.coefs_))
